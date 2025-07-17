@@ -1,5 +1,5 @@
 import flet as ft
-from task_cards import Task0
+from task_cards import Task0, Task1
 
 class Gui:
     def __init__(self, size: tuple = (1280, 720)):
@@ -9,7 +9,7 @@ class Gui:
         self.language_core = None
         self.issue_in_magazine = None
 
-        self.main_column = ft.Column()
+        self.main_column = ft.Column(scroll=ft.ScrollMode.AUTO)
         self.page_objects = ft.Container(content=self.main_column, expand=True)
 
         self.init_page()
@@ -20,6 +20,7 @@ class Gui:
         column_control.append(ft.Divider())
 
         self.tasks.append(Task0())
+        self.tasks.append(Task1())
 
 
         for card in self.tasks:
@@ -30,9 +31,14 @@ class Gui:
 
     def evaluate(self, event):
         data = {"num": self.issue_in_magazine.value, "core": self.language_core.value}
+
+        data["num"] = int(data["num"])
         assert self.check_data(data)
 
-        print(data)
+        for t in self.tasks:
+            t.evaluate(data["num"])
+
+        event.page.update()
 
     def gen_settings_card(self):
         main_row = ft.Row()

@@ -1,1 +1,1 @@
-from graph_gen import gen_graph
+from .graph_gen import gen_graph
