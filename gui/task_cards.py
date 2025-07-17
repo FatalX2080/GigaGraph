@@ -1,14 +1,15 @@
 import flet as ft
-from solvers import *
+import solvers
 
 
 class Task:
-    def __init__(self):
+    def __init__(self, page_size):
         self.main_col = ft.Column()
         self.card = ft.Card(ft.Container(content=self.main_col, margin=10, padding=10))
-        self.title = ft.Text(style=ft.TextStyle(size=18), weight=ft.FontWeight.BOLD, width=float("inf"),
+        self.title = ft.Text(style=ft.TextStyle(size=20), weight=ft.FontWeight.BOLD, width=float("inf"),
                              text_align=ft.TextAlign.CENTER)
         self.main_col.controls.append(self.title)
+        self.page_size = page_size
 
     def get_card(self) -> ft.Card:
         return self.card
@@ -21,17 +22,24 @@ class Task:
 
 
 class Task0(Task):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, page_size):
+        super().__init__(page_size)
         self.title.value = "Graph"
 
         # add elements -------------------------------------------------------------------------------------
-        # self.add_obj()
+        self.img = ft.Image(
+            src=".svg", width=0.4 * self.page_size[0],
+            height=0.4 * self.page_size[0], fit=ft.ImageFit.CONTAIN
+        )
+        self.add_obj(ft.Row([self.img], alignment=ft.MainAxisAlignment.CENTER))
+
+    def evaluate(self, journal_num: int):
+        solvers.draw_by_issue(journal_num, self.img)
 
 
 class Task1(Task):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, page_size):
+        super().__init__(page_size)
         self.title.value = "Task 1"
         bold = ft.FontWeight.BOLD
 
@@ -39,9 +47,9 @@ class Task1(Task):
         self.incidence_table = ft.DataTable(columns=[ft.DataColumn(ft.Text("."))])
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Adjacency table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(ft.Text("Adjacency table", style=ft.TextStyle(size=18), weight=bold))
         self.add_obj(ft.Row([self.adjacency_table], scroll=ft.ScrollMode.AUTO))
-        self.add_obj(ft.Text("Incidence table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(ft.Text("Incidence table", style=ft.TextStyle(size=18), weight=bold))
         self.add_obj(ft.Row([self.incidence_table], scroll=ft.ScrollMode.AUTO))
 
     def evaluate(self, journal_num: int):
@@ -53,7 +61,7 @@ class Task1(Task):
         ct.rows.clear()
         it.rows.clear()
 
-        v, e = gen_graph(journal_num)
+        v, e = solvers.gen_graph(journal_num)
 
         for vertex in v:
             row_start = [ft.DataCell(ft.Text(str(vertex)))]

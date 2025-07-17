@@ -19,8 +19,8 @@ class Gui:
         column_control.append(self.gen_settings_card())
         column_control.append(ft.Divider())
 
-        self.tasks.append(Task0())
-        self.tasks.append(Task1())
+        self.tasks.append(Task0(self.page_size))
+        self.tasks.append(Task1(self.page_size))
 
 
         for card in self.tasks:
