@@ -1,5 +1,5 @@
 import flet as ft
-from task_cards import Task0, Task1
+from gui.task_cards import Task0, Task1
 
 class Gui:
     def __init__(self, size: tuple = (1280, 720)):
