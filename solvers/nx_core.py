@@ -216,7 +216,7 @@ class CuteGraph:
 
 
     def is_line_graph(self) -> TaskResult:
-        """5. Проверить, является ли граф рёберным"""
+        """5. Проверить, является ли граф рёберным и построить образ"""
         try:
             # Проверяем основные свойства рёберных графов
             if not nx.is_connected(self.undi_graph):
@@ -226,14 +226,13 @@ class CuteGraph:
                     data={'is_line_graph': False, 'reason': 'Граф не связный'}
                 )
             
+            is_line = False
+            line_graph_image = None
+            original_edges_mapping = {}
+            
             # Проверяем с помощью встроенной функции NetworkX (если доступна)
             try:
                 is_line = nx.is_line_graph(self.undi_graph)
-                return TaskResult(
-                    success=True,
-                    task_name="Проверка рёберного графа",
-                    data={'is_line_graph': is_line}
-                )
             except AttributeError:
                 # Функция может быть недоступна в некоторых версиях
                 # Используем собственную проверку
@@ -241,15 +240,34 @@ class CuteGraph:
                 odd_degree_count = sum(1 for deg in degrees.values() if deg % 2 != 0)
                 
                 # Эвристическая проверка
-                is_line_candidate = (odd_degree_count <= 2 and 
-                                len(self.undi_graph.nodes()) >= 3 and
-                                nx.is_connected(self.undi_graph))
+                is_line = (odd_degree_count <= 2 and 
+                        len(self.undi_graph.nodes()) >= 3 and
+                        nx.is_connected(self.undi_graph))
+            
+            # Если граф рёберный, строим его образ
+            if is_line:
+                line_graph_image, original_edges_mapping = self._build_line_graph_image()
+                
+                # Сохраняем визуализацию
+                visualization_path = self._visualize_line_graph(line_graph_image, original_edges_mapping)
                 
                 return TaskResult(
                     success=True,
                     task_name="Проверка рёберного графа",
-                    data={'is_line_graph': is_line_candidate, 
-                        'note': 'Проверка выполнена по эвристическим правилам'}
+                    data={
+                        'is_line_graph': True,
+                        'line_graph_nodes': list(line_graph_image.nodes()),
+                        'line_graph_edges': list(line_graph_image.edges()),
+                        'original_edges_mapping': original_edges_mapping,
+                        'note': 'Граф является рёберным, образ построен'
+                    },
+                    visualizations=[visualization_path] if visualization_path else []
+                )
+            else:
+                return TaskResult(
+                    success=True,
+                    task_name="Проверка рёберного графа",
+                    data={'is_line_graph': False, 'reason': 'Не удовлетворяет критериям рёберного графа'}
                 )
                 
         except Exception as e:
@@ -258,6 +276,64 @@ class CuteGraph:
                 task_name="Проверка рёберного графа",
                 error=str(e)
             )
+
+    def _build_line_graph_image(self):
+        """Строит образ рёберного графа"""
+        # Создаём новый граф для образа
+        line_graph = nx.Graph()
+        original_edges = list(self.undi_graph.edges())
+        original_edges_mapping = {}
+        
+        # Добавляем вершины в образ (каждая вершина соответствует ребру исходного графа)
+        for i, edge in enumerate(original_edges):
+            line_graph.add_node(i)
+            original_edges_mapping[i] = edge
+        
+        # Добавляем рёбра в образ (соединяем вершины, если соответствующие рёбра имеют общую вершину)
+        for i in range(len(original_edges)):
+            for j in range(i + 1, len(original_edges)):
+                edge_i = original_edges[i]
+                edge_j = original_edges[j]
+                
+                # Проверяем, имеют ли рёбра общую вершину
+                if (edge_i[0] in edge_j or edge_i[1] in edge_j):
+                    line_graph.add_edge(i, j)
+        
+        return line_graph, original_edges_mapping
+
+    def _visualize_line_graph(self, line_graph, original_edges_mapping):
+        """Визуализирует образ рёберного графа"""
+        try:
+            plt.figure(figsize=(12, 10))
+            pos = nx.spring_layout(line_graph, k=1.5, iterations=50)
+            
+            # Рисуем граф
+            nx.draw(line_graph, pos, with_labels=True, node_color='lightgreen', 
+                    node_size=800, font_size=10, font_weight='bold')
+            
+            # Добавляем метки с исходными рёбрами
+            labels = {}
+            for node in line_graph.nodes():
+                original_edge = original_edges_mapping[node]
+                labels[node] = f"{original_edge[0]}-{original_edge[1]}\n({node})"
+            
+            nx.draw_networkx_labels(line_graph, pos, labels, font_size=8)
+            
+            # Добавляем заголовок
+            plt.title("Образ рёберного графа\n(вершины соответствуют рёбрам исходного графа)")
+            
+            # Сохраняем изображение
+            import os
+            os.makedirs('visualizations', exist_ok=True)
+            visualization_path = 'visualizations/line_graph_image.png'
+            plt.savefig(visualization_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            return visualization_path
+            
+        except Exception as e:
+            print(f"Ошибка при визуализации: {e}")
+            return None
 
 
     def calculate_connectivity(self) -> TaskResult:
