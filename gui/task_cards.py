@@ -1,7 +1,6 @@
 import flet as ft
 from solvers import *
 
-
 class Task:
     def __init__(self):
         self.main_col = ft.Column()

@@ -16,26 +16,6 @@ M2 = {1, 2, 3, 5, 6}
 vertices = sorted(list(M1.union(M2)))
 vertices.append(lcm_list(vertices))
 
-# Функция для проверки отношения покрытия
-def is_covering(a, b, vertices):
-    if b % a != 0:  # b должно делиться на a
-        return False
-    
-    # Проверяем, существует ли c такое, что a < c < b
-    for c in vertices:
-        if c != a and c != b and b % c == 0 and c % a == 0:
-            return False
-    return True
-
-# Создаем ориентированный граф для диаграммы Хассе
-G = nx.DiGraph()
-G.add_nodes_from(vertices)
-
-# Добавляем ребра на основе отношения покрытия
-for i in range(len(vertices)):
-    for j in range(len(vertices)):
-        if i != j and is_covering(vertices[i], vertices[j], vertices):
-            G.add_edge(vertices[i], vertices[j])
 
 # Функция для создания матрицы смежности
 def create_adjacency_matrix(graph):
