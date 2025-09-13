@@ -1,5 +1,6 @@
 import flet as ft
-from solvers import *
+from solvers.nx_core import CuteGraph
+
 
 class Task:
     def __init__(self):
@@ -40,59 +41,107 @@ class Task1(Task):
         # add elements -------------------------------------------------------------------------------------
         self.add_obj(ft.Text("Adjacency table", style=ft.TextStyle(size=16), weight=bold))
         self.add_obj(ft.Row([self.adjacency_table], scroll=ft.ScrollMode.AUTO))
+        self.add_obj(ft.Divider())
         self.add_obj(ft.Text("Incidence table", style=ft.TextStyle(size=16), weight=bold))
         self.add_obj(ft.Row([self.incidence_table], scroll=ft.ScrollMode.AUTO))
 
-    def evaluate(self, journal_num: int):
+    def evaluate(self, solver: CuteGraph):
+        self.adjacency_table.columns = [ft.DataColumn(ft.Text("."))]
+        self.incidence_table.columns = [ft.DataColumn(ft.Text("."))]
+        self.adjacency_table.rows.clear()
+        self.incidence_table.rows.clear()
+
+        self.fill_adj_table(solver)
+        self.fill_inc_table(solver)
+
+    def fill_adj_table(self, solver):
         ct = self.adjacency_table
-        it = self.incidence_table
 
-        ct.columns = [ft.DataColumn(ft.Text("."))]
-        it.columns = [ft.DataColumn(ft.Text("."))]
-        ct.rows.clear()
-        it.rows.clear()
+        adj = solver.create_adjacency_matrix().data["matrix"]
+        v, e = solver.raw_vertices, solver.raw_edges
 
-        v, e = gen_graph(journal_num)
-
-        for vertex in v:
+        for i, vertex in enumerate(v):
             row_start = [ft.DataCell(ft.Text(str(vertex)))]
-            empty_row = [ft.DataCell(ft.Text("0")) for _ in range(len(v))]
-            row = ft.DataRow(cells=row_start + empty_row)
+            table_row = []
+            for j in range(len(v)):
+                el = adj[i][j]
+                cell = ft.Text(str(el))
+                if el: cell.style = ft.TextStyle(color=ft.Colors.GREEN)
+                table_row.append(ft.DataCell(cell))
 
+            row = ft.DataRow(cells=row_start + table_row)
             ct.columns.append(ft.DataColumn(ft.Text(str(vertex))))
             ct.rows.append(row)
-            self.draw_incidence_table_cells(e, vertex)
+
+    def fill_inc_table(self, solver):
+        it = self.incidence_table
+
+        inc = solver.create_incidence_matrix().data["matrix"]
+        v, e = solver.raw_vertices, solver.raw_edges
 
         for iex in range(1, len(e) + 1):
             it.columns.append(ft.DataColumn(ft.Text(f"u{iex}")))
-            self.draw_adjacency_table_cells(e[iex - 1], v)
 
-    # auxiliary --------------------------------------------------------------------------------------------
+        for i, t_row in enumerate(inc):
+            row_start = [ft.DataCell(ft.Text(str(v[i])))]
+            table_row = []
+            for j in range(len(inc[0])):
+                el = t_row[j]
+                cell = ft.Text(str(el))
+                if el == 1:
+                    cell.style = ft.TextStyle(color=ft.Colors.GREEN)
+                elif el == -1:
+                    cell.style = ft.TextStyle(color=ft.Colors.RED)
+                table_row.append(ft.DataCell(cell))
 
-    def draw_adjacency_table_cells(self, edge, vertexes) -> None:
-        start_index = vertexes.index(edge[0])
-        end_index = vertexes.index(edge[1])
-        text1 = self.adjacency_table.rows[start_index].cells[end_index + 1].content
-        text2 = self.adjacency_table.rows[end_index].cells[start_index + 1].content
+            row = ft.DataRow(cells=row_start + table_row)
+            it.rows.append(row)
 
-        text1.value = "1"
-        text2.value = "1"
 
-        text1.style = ft.TextStyle(color=ft.Colors.GREEN)
-        text2.style = ft.TextStyle(color=ft.Colors.GREEN)
+class Task3(Task):
+    def __init__(self):
+        super().__init__()
+        self.title.value = "Task 3"
+        self.colors = [
+            ft.Colors.WHITE,
+            ft.Colors.BLUE,
+            ft.Colors.CYAN,
+            ft.Colors.GREEN,
+            ft.Colors.YELLOW,
+            ft.Colors.PINK,
+            ft.Colors.ORANGE,
+            ft.Colors.RED,
+            ft.Colors.PURPLE,
+            ft.Colors.BROWN,
+        ]
+        bold = ft.FontWeight.BOLD
 
-    def draw_incidence_table_cells(self, edges, vertex) -> None:
-        str_vertex = str(vertex)
-        row = ft.DataRow(cells=[ft.DataCell(ft.Text(str_vertex))])
-        for edge in edges:
-            if vertex == edge[0]:
-                text = "1"
-                style = ft.TextStyle(color=ft.Colors.GREEN)
-            elif vertex == edge[1]:
-                text = "-1"
-                style = ft.TextStyle(color=ft.Colors.RED)
-            else:
-                text = "0"
-                style = ft.TextStyle()
-            row.cells.append(ft.DataCell(ft.Text(text, style=style)))
-        self.incidence_table.rows.append(row)
+        self.distance_table = ft.DataTable(columns=[ft.DataColumn(ft.Text("."))])
+
+        # add elements -------------------------------------------------------------------------------------
+        self.add_obj(ft.Text("Distance table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(ft.Row([self.distance_table], scroll=ft.ScrollMode.AUTO))
+
+    def evaluate(self, solver: CuteGraph):
+        dt = self.distance_table
+
+        dt.columns = [ft.DataColumn(ft.Text("."))]
+        dt.rows.clear()
+
+        answer = solver.create_distance_matrix()
+        shape = answer.data["dimensions"][0]
+        table = answer.data["matrix"]
+        v = [str(_) for _ in solver.raw_vertices]
+
+        for iex, vertex in enumerate(v):
+            row_start = [ft.DataCell(ft.Text(vertex))]
+            answer_row = []
+            for j in range(shape):
+                value = table[iex][j]
+                st = ft.TextStyle(color=self.colors[value])
+                answer_row.append(
+                    ft.DataCell(ft.Text(str(value), style=st)),
+                )
+            row = ft.DataRow(cells=row_start + answer_row)
+            dt.columns.append(ft.DataColumn(ft.Text(vertex)))
+            dt.rows.append(row)

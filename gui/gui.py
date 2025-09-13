@@ -1,5 +1,7 @@
 import flet as ft
-from gui.task_cards import Task0, Task1
+from gui.task_cards import Task0, Task1, Task3
+from solvers.nx_core import CuteGraph
+from solvers.graph_gen import gen_graph
 
 class Gui:
     def __init__(self, size: tuple = (1280, 720)):
@@ -21,6 +23,7 @@ class Gui:
 
         self.tasks.append(Task0())
         self.tasks.append(Task1())
+        self.tasks.append(Task3())
 
 
         for card in self.tasks:
@@ -35,8 +38,12 @@ class Gui:
         data["num"] = int(data["num"])
         assert self.check_data(data)
 
+        v, e = gen_graph(data["num"])
+        solver = CuteGraph(v, e)
+        solver.build_coverage_graph()
+
         for t in self.tasks:
-            t.evaluate(data["num"])
+            t.evaluate(solver)
 
         event.page.update()
 
