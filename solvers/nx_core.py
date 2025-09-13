@@ -6,7 +6,10 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Dict, Any
-from task_result_class import TaskResult #КЛАСС УНИФИЦИРОВАННОГО ОТВЕТА
+try:
+    from task_result_class import TaskResult #КЛАСС УНИФИЦИРОВАННОГО ОТВЕТА
+except ImportError:
+    from solvers.task_result_class import TaskResult
 import numpy as np
 
 
@@ -93,7 +96,7 @@ class CuteGraph:
                     'matrix': adj_matrix.tolist(),
                     'nodes': nodes,
                     'edges': self.di_graph.edges(),
-                    'dimensions': f"{n}×{n}",
+                    'dimensions': (n, n),
                     'matrix_type': 'adjacency'
                 }
             )
@@ -126,7 +129,7 @@ class CuteGraph:
                     'matrix': inc_matrix.tolist(),
                     'nodes': nodes,
                     'edges': edges,
-                    'dimensions': f"{n}×{m}",
+                    'dimensions': (n, n),
                     'matrix_type': 'incidence'
                 }
             )
@@ -175,7 +178,7 @@ class CuteGraph:
                     'matrix': dist_matrix_serializable,
                     'nodes': nodes,
                     'edges': self.undi_graph.edges(),
-                    'dimensions': f"{n}×{n}",
+                    'dimensions': (n, n),
                     'matrix_type': 'distance'
                 }
             )
