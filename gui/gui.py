@@ -1,5 +1,5 @@
 import flet as ft
-from gui.task_cards import Task0, Task1, Task3
+from gui.gui_cards import Task
 from solvers.nx_core import CuteGraph
 from solvers.graph_gen import gen_graph
 
@@ -21,15 +21,13 @@ class Gui:
         column_control.append(self.gen_settings_card())
         column_control.append(ft.Divider())
 
-        self.tasks.append(Task0())
-        self.tasks.append(Task1())
-        self.tasks.append(Task3())
-
+        self.tasks = Task.tasks_list
 
         for card in self.tasks:
             self.main_column.controls.append(card.get_card())
 
     def check_data(self, data: dict) -> bool:
+        # FIXME доделать проверку ввода
         return 1
 
     def evaluate(self, event):
