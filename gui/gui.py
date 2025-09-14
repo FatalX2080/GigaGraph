@@ -3,6 +3,22 @@ from gui.gui_cards import Task
 from solvers.nx_core import CuteGraph
 from solvers.graph_gen import gen_graph
 
+from config import max_journal_num, rejection_message
+
+
+def close_dlg(e):
+    dlg_modal.open = False
+    e.control.page.update()
+
+
+dlg_modal = ft.AlertDialog(
+    modal=True, title=ft.Text("Allert"),
+    content=ft.Text(rejection_message),
+    actions=[ft.TextButton("Yes", on_click=close_dlg), ],
+    actions_alignment=ft.MainAxisAlignment.END, on_dismiss=close_dlg
+)
+
+
 class Gui:
     def __init__(self, size: tuple = (1280, 720)):
         self.page = None
@@ -28,21 +44,33 @@ class Gui:
             self.main_column.controls.append(card.get_card())
 
     def check_data(self, data: dict) -> bool:
-        # FIXME доделать проверку ввода
-        return 1
+        try:
+            if not (0 <= int(data["num"]) <= max_journal_num):
+                return False
+        except ValueError:
+            return False
+
+        if data["core"] != "Python":
+            self.page.overlay.append(dlg_modal)
+            dlg_modal.open = True
+            self.language_core.value = "Python"
+            self.page.update()
+            return False
+
+        return True
 
     def evaluate(self, event):
         data = {"num": self.issue_in_magazine.value, "core": self.language_core.value}
 
-        data["num"] = int(data["num"])
-        assert self.check_data(data)
+        accept = self.check_data(data)
+        if accept:
+            data["num"] = int(data["num"])
+            v, e = gen_graph(data["num"])
+            solver = CuteGraph(v, e)
+            solver.build_coverage_graph()
 
-        v, e = gen_graph(data["num"])
-        solver = CuteGraph(v, e)
-        solver.build_coverage_graph()
-
-        self.task_manager.evaluate_trigger(solver)
-        event.page.update()
+            self.task_manager.evaluate_trigger(solver)
+            event.page.update()
 
     def gen_settings_card(self):
         main_row = ft.Row()
@@ -50,7 +78,7 @@ class Gui:
         self.language_core = ft.Dropdown(label="Solver core", width=200, options=[
             ft.DropdownOption("C"),
             ft.DropdownOption("Python"),
-        ])
+        ], value="Python")
         self.issue_in_magazine = ft.TextField(label="Issue in the magazine")
         evaluate_button = ft.Button("Evaluate", on_click=self.evaluate)
 

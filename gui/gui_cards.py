@@ -1,9 +1,6 @@
 import flet as ft
-from PIL.ImageOps import expand
-
 from solvers.nx_core import CuteGraph
-from solvers.graph_gen import display_graph
-from base64 import b64encode
+from .graph_draftsman import Draftsman
 from config import flet_colors_list, colors_list
 
 
@@ -19,6 +16,7 @@ class Task:
         self.main_col = ft.Column()
         self.card = ft.Card(ft.Container(content=self.main_col, margin=10, padding=10))
         self.title = ft.Text(
+            "Template",
             style=ft.TextStyle(size=18),
             weight=ft.FontWeight.BOLD,
             width=float("inf"),
@@ -64,9 +62,9 @@ class Task0(Task):
 
     def evaluate(self, solver):
         v, e = solver.raw_vertices, solver.raw_edges
-        img = display_graph(v, e, "Graph")
-        base64_image = b64encode(img).decode('utf-8')
-        self.img.src_base64 = base64_image
+        gd = Draftsman(v, e)
+        img = gd.display_graph("Graph")
+        self.img.src_base64 = gd.to_flet_format(img)
         Task.resize_image(self.img)
 
 
@@ -138,6 +136,11 @@ class Task1(Task):
             it.rows.append(row)
 
 
+class Task2(Task):
+    def __init__(self):
+        super().__init__()
+
+
 class Task3(Task):
     def __init__(self):
         super().__init__()
@@ -177,7 +180,6 @@ class Task3(Task):
 class Task4(Task):
     def __init__(self):
         super().__init__()
-
         self.title.value = "Task 4"
 
         self.radius = ft.Text("Radius: -")
@@ -218,9 +220,9 @@ class Task5(Task):
         if is_line:
             self.edge.value = f"Edge state: yes"
             v, e = answer.data["line_graph_nodes"], answer.data["line_graph_edges"]
-            img = display_graph(v, e, "line graph")
-            base64_image = b64encode(img).decode('utf-8')
-            self.img.src_base64 = base64_image
+            gd = Draftsman(v, e)
+            img = gd.display_graph("Line graph")
+            self.img.src_base64 = gd.to_flet_format(img)
             Task.resize_image(self.img)
         else:
             self.edge.value = f"Edge state: no"
@@ -229,7 +231,6 @@ class Task5(Task):
 class Task6(Task):
     def __init__(self):
         super().__init__()
-
         self.title.value = "Task 6"
 
         self.vc = ft.Text("Vertex connectivity: -")
@@ -252,7 +253,6 @@ class Task6(Task):
 class Task7(Task):
     def __init__(self):
         super().__init__()
-
         self.title.value = "Task 7"
 
         self.bc = ft.Text("Blocks count: -")
@@ -277,9 +277,9 @@ class Task7(Task):
             for el in block:
                 v_colors[v.index(el)] = colors_list[iex]
 
-        img = display_graph(v, e, "line graph", v_colors)
-        base64_image = b64encode(img).decode('utf-8')
-        self.img.src_base64 = base64_image
+        gd = Draftsman(v, e)
+        img = gd.display_graph("Blocks graph", v_colors)
+        self.img.src_base64 = gd.to_flet_format(img)
         Task.resize_image(self.img)
 
         self.bc.value = f"Blocks count: {bc}"
@@ -290,16 +290,10 @@ class Task8(Task):
     def __init__(self):
         super().__init__()
 
-        self.title.value = "Task 8"
-
-        # add elements -------------------------------------------------------------------------------------
-        self.add_obj(get_description_title("Eulerian:"))
-
 
 class Task9(Task):
     def __init__(self):
         super().__init__()
-
         self.title.value = "Task 9"
 
         self.eg = ft.Text("Eulerian graph: -")
