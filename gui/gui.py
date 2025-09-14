@@ -7,9 +7,9 @@ class Gui:
     def __init__(self, size: tuple = (1280, 720)):
         self.page = None
         self.page_size = size
-        self.tasks = []
         self.language_core = None
         self.issue_in_magazine = None
+        self.task_manager = None
 
         self.main_column = ft.Column(scroll=ft.ScrollMode.AUTO)
         self.page_objects = ft.Container(content=self.main_column, expand=True)
@@ -21,9 +21,10 @@ class Gui:
         column_control.append(self.gen_settings_card())
         column_control.append(ft.Divider())
 
-        self.tasks = Task.tasks_list
+        self.task_manager = Task
+        self.task_manager.set_page_size(self.page_size)
 
-        for card in self.tasks:
+        for card in self.task_manager.tasks_list:
             self.main_column.controls.append(card.get_card())
 
     def check_data(self, data: dict) -> bool:
@@ -40,9 +41,7 @@ class Gui:
         solver = CuteGraph(v, e)
         solver.build_coverage_graph()
 
-        for t in self.tasks:
-            t.evaluate(solver)
-
+        self.task_manager.evaluate_trigger(solver)
         event.page.update()
 
     def gen_settings_card(self):

@@ -1,18 +1,29 @@
 import flet as ft
+from PIL.ImageOps import expand
+
 from solvers.nx_core import CuteGraph
 from solvers.graph_gen import display_graph
 from base64 import b64encode
 from config import flet_colors_list, colors_list
 
 
+def get_description_title(text: str) -> ft.Text:
+    return ft.Text(text, style=ft.TextStyle(size=16), weight=ft.FontWeight.BOLD)
+
+
 class Task:
     tasks_list = []
+    page_shape = ()
 
     def __init__(self):
         self.main_col = ft.Column()
         self.card = ft.Card(ft.Container(content=self.main_col, margin=10, padding=10))
-        self.title = ft.Text(style=ft.TextStyle(size=18), weight=ft.FontWeight.BOLD, width=float("inf"),
-                             text_align=ft.TextAlign.CENTER)
+        self.title = ft.Text(
+            style=ft.TextStyle(size=18),
+            weight=ft.FontWeight.BOLD,
+            width=float("inf"),
+            text_align=ft.TextAlign.CENTER
+        )
         self.main_col.controls.append(self.title)
 
     def __init_subclass__(cls, **kwargs):
@@ -28,6 +39,19 @@ class Task:
     def evaluate(self, *args, **kwargs) -> None:
         pass
 
+    @staticmethod
+    def resize_image(img_obj: ft.Image):
+        img_obj.width = 0.7 * Task.page_shape[0]
+
+    @staticmethod
+    def evaluate_trigger(solver: CuteGraph) -> None:
+        for task in Task.tasks_list:
+            task.evaluate(solver)
+
+    @staticmethod
+    def set_page_size(page_size: tuple) -> None:
+        Task.page_shape = page_size
+
 
 class Task0(Task):
     def __init__(self):
@@ -36,29 +60,29 @@ class Task0(Task):
 
         self.img = ft.Image()
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(self.img)
+        self.add_obj(ft.Row([self.img], expand=True, alignment=ft.MainAxisAlignment.CENTER))
 
     def evaluate(self, solver):
         v, e = solver.raw_vertices, solver.raw_edges
         img = display_graph(v, e, "Graph")
         base64_image = b64encode(img).decode('utf-8')
         self.img.src_base64 = base64_image
+        Task.resize_image(self.img)
 
 
 class Task1(Task):
     def __init__(self):
         super().__init__()
         self.title.value = "Task 1"
-        bold = ft.FontWeight.BOLD
 
         self.adjacency_table = ft.DataTable(columns=[ft.DataColumn(ft.Text("."))])
         self.incidence_table = ft.DataTable(columns=[ft.DataColumn(ft.Text("."))])
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Adjacency table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Adjacency table"))
         self.add_obj(ft.Row([self.adjacency_table], scroll=ft.ScrollMode.AUTO))
         self.add_obj(ft.Divider())
-        self.add_obj(ft.Text("Incidence table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Incidence table"))
         self.add_obj(ft.Row([self.incidence_table], scroll=ft.ScrollMode.AUTO))
 
     def evaluate(self, solver: CuteGraph):
@@ -118,12 +142,11 @@ class Task3(Task):
     def __init__(self):
         super().__init__()
         self.title.value = "Task 3"
-        bold = ft.FontWeight.BOLD
 
         self.distance_table = ft.DataTable(columns=[ft.DataColumn(ft.Text("."))])
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Distance table", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Distance table"))
         self.add_obj(ft.Row([self.distance_table], scroll=ft.ScrollMode.AUTO))
 
     def evaluate(self, solver: CuteGraph):
@@ -156,13 +179,12 @@ class Task4(Task):
         super().__init__()
 
         self.title.value = "Task 4"
-        bold = ft.FontWeight.BOLD
 
         self.radius = ft.Text("Radius: -")
         self.diameter = ft.Text("Diameter: -")
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Radius / Diameter:", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Radius / Diameter:"))
 
         self.add_obj(self.radius)
         self.add_obj(self.diameter)
@@ -181,15 +203,14 @@ class Task5(Task):
         super().__init__()
 
         self.title.value = "Task 5"
-        bold = ft.FontWeight.BOLD
 
         self.edge = ft.Text("Edge state: -")
         self.img = ft.Image()
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Edge graph:", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Edge graph:"))
 
         self.add_obj(self.edge)
-        self.add_obj(self.img)
+        self.add_obj(ft.Row([self.img], expand=True, alignment=ft.MainAxisAlignment.CENTER))
 
     def evaluate(self, solver: CuteGraph):
         answer = solver.is_line_graph()
@@ -200,6 +221,7 @@ class Task5(Task):
             img = display_graph(v, e, "line graph")
             base64_image = b64encode(img).decode('utf-8')
             self.img.src_base64 = base64_image
+            Task.resize_image(self.img)
         else:
             self.edge.value = f"Edge state: no"
 
@@ -209,13 +231,12 @@ class Task6(Task):
         super().__init__()
 
         self.title.value = "Task 6"
-        bold = ft.FontWeight.BOLD
 
         self.vc = ft.Text("Vertex connectivity: -")
         self.ec = ft.Text("Edge connectivity: -")
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("connectivity:", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Connectivity:"))
 
         self.add_obj(self.vc)
         self.add_obj(self.ec)
@@ -233,28 +254,118 @@ class Task7(Task):
         super().__init__()
 
         self.title.value = "Task 7"
-        bold = ft.FontWeight.BOLD
 
         self.bc = ft.Text("Blocks count: -")
+        self.bs = ft.Text("Blocks: -")
         self.img = ft.Image()
 
         # add elements -------------------------------------------------------------------------------------
-        self.add_obj(ft.Text("Blocks:", style=ft.TextStyle(size=16), weight=bold))
+        self.add_obj(get_description_title("Blocks:"))
 
         self.add_obj(self.bc)
-        self.add_obj(self.img)
+        self.add_obj(self.bs)
+        self.add_obj(ft.Row([self.img], expand=True, alignment=ft.MainAxisAlignment.CENTER))
 
     def evaluate(self, solver: CuteGraph):
         answer = solver.find_blocks()
         bc = answer.data["block_count"]
+        blocks = answer.data["blocks"]
         v, e = solver.raw_vertices, solver.raw_edges
         v_colors = [0 for _ in range(len(v))]
-        for iex, block in enumerate(answer.data["blocks"]):
+
+        for iex, block in enumerate(blocks):
             for el in block:
                 v_colors[v.index(el)] = colors_list[iex]
 
         img = display_graph(v, e, "line graph", v_colors)
         base64_image = b64encode(img).decode('utf-8')
         self.img.src_base64 = base64_image
+        Task.resize_image(self.img)
 
         self.bc.value = f"Blocks count: {bc}"
+        self.bs.value = f"Blocks: {blocks}"
+
+
+class Task8(Task):
+    def __init__(self):
+        super().__init__()
+
+        self.title.value = "Task 8"
+
+        # add elements -------------------------------------------------------------------------------------
+        self.add_obj(get_description_title("Eulerian:"))
+
+
+class Task9(Task):
+    def __init__(self):
+        super().__init__()
+
+        self.title.value = "Task 9"
+
+        self.eg = ft.Text("Eulerian graph: -")
+        self.odn = ft.Text("Odd degree nodes (?): -")
+        self.eta = ft.Text("Edges to add (?): -")
+        # add elements -------------------------------------------------------------------------------------
+        self.add_obj(get_description_title("Eulerian:"))
+
+        self.add_obj(self.eg)
+        self.add_obj(self.odn)
+        self.add_obj(self.eta)
+
+    def evaluate(self, solver: CuteGraph):
+        answer = solver.check_eulerian()
+
+        is_eulerian = answer.data["is_eulerian"]
+        self.eg.value = f"Eulerian graph: {'yes' if is_eulerian else 'no'}"
+
+        if not is_eulerian:
+            odd_degree_nodes = answer.data["odd_degree_nodes"]
+            odd_degree_count = answer.data["odd_degree_count"]
+            edges_to_add = answer.data["edges_to_add"]
+            edges_to_add_count = answer.data["edges_to_add_count"]
+
+            self.odn.value = f"Odd degree nodes ({odd_degree_count}): {odd_degree_nodes}"
+            self.eta.value = f"Edges to add ({edges_to_add_count}): {edges_to_add}"
+
+
+class Task10(Task):
+    def __init__(self):
+        super().__init__()
+        self.title.value = "Task 10"
+
+        self.hg = ft.Text("Hamiltonian graph: -")
+        self.nc = ft.Text("Nodes count: -")
+        self.md = ft.Text("Min degree: -")
+        self.dc = ft.Text("Dirac condition: -")
+        self.ldn = ft.Text("Low degree nodes: -")
+        self.eta = ft.Text("Edges to add: -")
+
+        # add elements -------------------------------------------------------------------------------------
+        self.add_obj(get_description_title("Hamiltonian:"))
+
+        self.add_obj(self.hg)
+        self.add_obj(self.nc)
+        self.add_obj(self.md)
+        self.add_obj(self.dc)
+        self.add_obj(self.ldn)
+        self.add_obj(self.eta)
+
+    def evaluate(self, solver: CuteGraph):
+        answer = solver.check_hamiltonian()
+
+        is_hamiltonian = answer.data["is_hamiltonian"]
+        self.hg.value = f"Hamiltonian graph: {'yes' if is_hamiltonian else 'no'}"
+
+        if not is_hamiltonian:
+            node_count = answer.data["node_count"]
+            min_degree = answer.data["min_degree"]
+            dirac_condition = answer.data["dirac_condition"]
+            dirac_satisfied = answer.data["dirac_satisfied"]
+            low_degree_nodes = answer.data["low_degree_nodes"]
+            edges_to_add = answer.data["edges_to_add"]
+
+            self.nc.value = f"Nodes count: {node_count}"
+            self.md.value = f"Min degree: {min_degree}"
+            self.dc.value = f"Dirac condition: ({dirac_condition}) => {str(dirac_satisfied).upper()}"
+            self.ldn.value = f"Low degree nodes: {low_degree_nodes}"
+            self.eta.value = f"Edges to add: {edges_to_add}"
