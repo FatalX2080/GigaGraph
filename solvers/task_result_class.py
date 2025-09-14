@@ -1,8 +1,4 @@
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
-import numpy as np
-import networkx as nx
-import matplotlib.pyplot as plt
+from typing import Any, Dict, List, Optional
 import json
 
 
@@ -30,5 +26,4 @@ class TaskResult:
         }
     
     def to_json(self):
-        import json
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
