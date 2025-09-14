@@ -1,5 +1,7 @@
 from flet import Colors
 
+win_size = (1280, 720)
+
 max_journal_num = 34
 
 flet_colors_list = [

@@ -46,8 +46,12 @@ class Gui:
     def check_data(self, data: dict) -> bool:
         try:
             if not (0 <= int(data["num"]) <= max_journal_num):
+                self.issue_in_magazine.value = ""
+                self.issue_in_magazine.update()
                 return False
         except ValueError:
+            self.issue_in_magazine.value = ""
+            self.issue_in_magazine.update()
             return False
 
         if data["core"] != "Python":
